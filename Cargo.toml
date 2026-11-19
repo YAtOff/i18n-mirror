@@ -1,6 +1,6 @@
 [package]
 name = "i18n-mirror"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Mirror gettext-style calls in modern JS/TS/JSX sources into xgettext-safe dummy files, preserving file names and line numbers (built for Django makemessages djangojs)"
 license = "MIT"
