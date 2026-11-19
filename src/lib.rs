@@ -80,7 +80,10 @@ pub const DEFAULT_FUNCTIONS: &[(&str, Kind)] = &[
 impl Default for Config {
     fn default() -> Self {
         Config {
-            functions: DEFAULT_FUNCTIONS.iter().map(|(k, v)| (k.to_string(), *v)).collect(),
+            functions: DEFAULT_FUNCTIONS
+                .iter()
+                .map(|(k, v)| (k.to_string(), *v))
+                .collect(),
             extensions: ["js", "mjs", "cjs", "jsx", "ts", "mts", "cts", "tsx"]
                 .iter()
                 .map(|s| s.to_string())
@@ -150,7 +153,9 @@ pub fn extract(source: &str, ext: &str, config: &Config) -> Result<Extraction, S
     parser.set_language(&lang).map_err(|e| e.to_string())?;
     let query = build_query(lang)?;
 
-    let tree = parser.parse(source, None).ok_or("parser returned no tree")?;
+    let tree = parser
+        .parse(source, None)
+        .ok_or("parser returned no tree")?;
     let mut cursor = QueryCursor::new();
 
     let fn_idx = query.capture_index_for_name("fn").unwrap();
@@ -198,7 +203,10 @@ pub fn extract(source: &str, ext: &str, config: &Config) -> Result<Extraction, S
         let (Some(f), Some(a), Some(c)) = (fn_node, args_node, call_node) else {
             continue;
         };
-        let name = f.utf8_text(bytes).map_err(|_| "not UTF-8".to_string())?.to_string();
+        let name = f
+            .utf8_text(bytes)
+            .map_err(|_| "not UTF-8".to_string())?
+            .to_string();
         call_matches.push((c.start_position().row, name, a));
     }
 
@@ -211,7 +219,9 @@ pub fn extract(source: &str, ext: &str, config: &Config) -> Result<Extraction, S
     };
 
     for (row, name, args_node) in call_matches {
-        let Some(kind) = config.functions.get(&name) else { continue };
+        let Some(kind) = config.functions.get(&name) else {
+            continue;
+        };
         let arg_nodes = positional_args(args_node);
         let arity = kind.literal_arity();
 
@@ -335,7 +345,9 @@ fn literal_string(node: Node, bytes: &[u8]) -> Option<String> {
         "as_expression" | "satisfies_expression" | "non_null_expression" => {
             node.named_child(0).and_then(|n| literal_string(n, bytes))
         }
-        "type_assertion" => node.named_child(node.named_child_count().saturating_sub(1)).and_then(|n| literal_string(n, bytes)),
+        "type_assertion" => node
+            .named_child(node.named_child_count().saturating_sub(1))
+            .and_then(|n| literal_string(n, bytes)),
         _ => None,
     }
 }
@@ -358,7 +370,7 @@ fn comment_is_standalone(source: &str, row: usize, col: usize) -> bool {
         .lines()
         .nth(row)
         .and_then(|line| line.get(..col))
-        .map_or(false, |prefix| matches!(prefix.trim(), "" | "{"))
+        .is_some_and(|prefix| matches!(prefix.trim(), "" | "{"))
 }
 
 /// Find the comment block immediately above `call_row` (blank lines break the
@@ -376,9 +388,9 @@ fn translator_comment_for(
         return None;
     }
     loop {
-        let found = comments
-            .iter()
-            .find(|(s, c, e, _)| *e == want_end && *s <= want_end && comment_is_standalone(source, *s, *c));
+        let found = comments.iter().find(|(s, c, e, _)| {
+            *e == want_end && *s <= want_end && comment_is_standalone(source, *s, *c)
+        });
         match found {
             Some(&(s, c, e, ref text)) => {
                 chain.insert(0, (s, c, e, text.clone()));
@@ -393,9 +405,10 @@ fn translator_comment_for(
     if chain.is_empty() {
         return None;
     }
-    let tagged = chain
-        .iter()
-        .any(|(_, _, _, text)| text.lines().any(|l| comment_text_line(l).starts_with("Translators")));
+    let tagged = chain.iter().any(|(_, _, _, text)| {
+        text.lines()
+            .any(|l| comment_text_line(l).starts_with("Translators"))
+    });
     if !tagged {
         return None;
     }
@@ -430,7 +443,7 @@ pub fn render(extraction: &Extraction) -> String {
         // duplicate the comment — drop it instead.
         let comment_fits = call.comment.iter().all(|(row, _)| {
             ensure(*row, &mut rows);
-            rows.get(*row).map_or(true, |r| r.is_empty())
+            rows.get(*row).is_none_or(|r| r.is_empty())
         });
         if comment_fits {
             for (row, line) in &call.comment {

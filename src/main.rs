@@ -48,10 +48,18 @@ fn parse_args() -> Result<Args, String> {
     let mut it = std::env::args().skip(1);
     while let Some(arg) = it.next() {
         match arg.as_str() {
-            "-s" | "--source" => args.source = PathBuf::from(it.next().ok_or("missing value for --source")?),
-            "-o" | "--output" => args.output = PathBuf::from(it.next().ok_or("missing value for --output")?),
-            "-f" | "--functions" => args.functions = Some(it.next().ok_or("missing value for --functions")?),
-            "-e" | "--extensions" => args.extensions = Some(it.next().ok_or("missing value for --extensions")?),
+            "-s" | "--source" => {
+                args.source = PathBuf::from(it.next().ok_or("missing value for --source")?)
+            }
+            "-o" | "--output" => {
+                args.output = PathBuf::from(it.next().ok_or("missing value for --output")?)
+            }
+            "-f" | "--functions" => {
+                args.functions = Some(it.next().ok_or("missing value for --functions")?)
+            }
+            "-e" | "--extensions" => {
+                args.extensions = Some(it.next().ok_or("missing value for --extensions")?)
+            }
             "--deny-warnings" => args.deny_warnings = true,
             "-q" | "--quiet" => args.quiet = true,
             "-V" | "--version" => {
@@ -76,8 +84,9 @@ fn build_config(functions: Option<&str>, extensions: Option<&str>) -> Result<Con
         for entry in list.split(',').map(str::trim).filter(|s| !s.is_empty()) {
             let (name, kind) = match entry.split_once('=') {
                 Some((n, k)) => {
-                    let kind = Kind::parse(k)
-                        .ok_or_else(|| format!("unknown kind {k:?} in --functions entry {entry:?}"))?;
+                    let kind = Kind::parse(k).ok_or_else(|| {
+                        format!("unknown kind {k:?} in --functions entry {entry:?}")
+                    })?;
                     (n.trim().to_string(), kind)
                 }
                 None => {
@@ -94,7 +103,9 @@ fn build_config(functions: Option<&str>, extensions: Option<&str>) -> Result<Con
                 }
             };
             if name.is_empty() {
-                return Err(format!("empty function name in --functions entry {entry:?}"));
+                return Err(format!(
+                    "empty function name in --functions entry {entry:?}"
+                ));
             }
             map.insert(name, kind);
         }
@@ -118,7 +129,14 @@ fn build_config(functions: Option<&str>, extensions: Option<&str>) -> Result<Con
 
 /// Directories never worth scanning.
 const SKIPPED_DIRS: &[&str] = &[
-    "node_modules", "dist", "build", "out", "coverage", ".git", ".cache", ".venv",
+    "node_modules",
+    "dist",
+    "build",
+    "out",
+    "coverage",
+    ".git",
+    ".cache",
+    ".venv",
 ];
 
 fn main() -> ExitCode {
@@ -140,7 +158,10 @@ fn main() -> ExitCode {
     let source = &args.source;
     let output = &args.output;
     if !source.is_dir() {
-        eprintln!("error: source directory {} does not exist", source.display());
+        eprintln!(
+            "error: source directory {} does not exist",
+            source.display()
+        );
         return ExitCode::FAILURE;
     }
     if !i18n_mirror::output_is_safe(source, output) {
@@ -165,32 +186,31 @@ fn main() -> ExitCode {
     let mut total_files = 0usize;
     let mut total_warnings = 0usize;
 
-    let walker = WalkDir::new(source)
-        .into_iter()
-        .filter_entry(|e| {
-            let p = e.path();
-            if e.depth() == 0 {
-                return true;
-            }
-            if p.is_dir() && p != output {
-                if let Some(name) = p.file_name().and_then(|n| n.to_str()) {
-                    if SKIPPED_DIRS.contains(&name) {
-                        return false;
-                    }
+    let walker = WalkDir::new(source).into_iter().filter_entry(|e| {
+        let p = e.path();
+        if e.depth() == 0 {
+            return true;
+        }
+        if p.is_dir() && p != output {
+            if let Some(name) = p.file_name().and_then(|n| n.to_str()) {
+                if SKIPPED_DIRS.contains(&name) {
+                    return false;
                 }
             }
-            if p == output {
-                return false;
-            }
-            true
-        });
+        }
+        p != output
+    });
 
     for entry in walker.filter_map(|e| e.ok()) {
         if !entry.file_type().is_file() {
             continue;
         }
         let path = entry.path();
-        let Some(ext) = path.extension().and_then(|e| e.to_str()).map(|e| e.to_ascii_lowercase()) else {
+        let Some(ext) = path
+            .extension()
+            .and_then(|e| e.to_str())
+            .map(|e| e.to_ascii_lowercase())
+        else {
             continue;
         };
         if !config.extensions.contains(&ext) {

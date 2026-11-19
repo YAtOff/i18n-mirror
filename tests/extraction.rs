@@ -2,7 +2,9 @@ use i18n_mirror::{extract, render, Config};
 use std::path::Path;
 
 fn fixture(name: &str) -> String {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures").join(name);
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(name);
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("cannot read {path:?}: {e}"))
 }
 
@@ -65,17 +67,45 @@ fn tricky_tsx_extracts_all_shapes_with_aligned_lines() {
     let ext = extract(&src, "tsx", &Config::default()).unwrap();
 
     assert!(!ext.had_parse_errors, "fixture must parse cleanly");
-    assert_eq!(ext.calls.len(), 13, "all call sites extracted: {:#?}", ext.calls);
-    assert_eq!(ext.warnings.len(), 2, "DYNAMIC and OPTS warn: {:#?}", ext.warnings);
-    assert!(ext.warnings[0].contains("not a statically evaluable"), "{}", ext.warnings[0]);
-    assert!(ext.warnings[1].contains("extra non-literal arguments"), "{}", ext.warnings[1]);
+    assert_eq!(
+        ext.calls.len(),
+        13,
+        "all call sites extracted: {:#?}",
+        ext.calls
+    );
+    assert_eq!(
+        ext.warnings.len(),
+        2,
+        "DYNAMIC and OPTS warn: {:#?}",
+        ext.warnings
+    );
+    assert!(
+        ext.warnings[0].contains("not a statically evaluable"),
+        "{}",
+        ext.warnings[0]
+    );
+    assert!(
+        ext.warnings[1].contains("extra non-literal arguments"),
+        "{}",
+        ext.warnings[1]
+    );
 
     let dummy = render(&ext);
     assert_valid_js(&dummy);
 
     // gettext / ngettext / pgettext / npgettext shapes, normalized.
-    assert_aligned(&src, &dummy, r#"gettext("Checkout")"#, r#"gettext("Checkout");"#);
-    assert_aligned(&src, &dummy, r#"gettext("Fresh produce"#, r#"gettext("Fresh produce, fast delivery");"#);
+    assert_aligned(
+        &src,
+        &dummy,
+        r#"gettext("Checkout")"#,
+        r#"gettext("Checkout");"#,
+    );
+    assert_aligned(
+        &src,
+        &dummy,
+        r#"gettext("Fresh produce"#,
+        r#"gettext("Fresh produce, fast delivery");"#,
+    );
     assert_aligned(
         &src,
         &dummy,
@@ -97,34 +127,88 @@ fn tricky_tsx_extracts_all_shapes_with_aligned_lines() {
 
     // Template literal without substitutions, spanning source lines, still
     // lands on the line where the call starts.
-    assert_aligned(&src, &dummy, "HELP_TEXT = t(", r#"gettext("Multi-line\ntemplate literal");"#);
+    assert_aligned(
+        &src,
+        &dummy,
+        "HELP_TEXT = t(",
+        r#"gettext("Multi-line\ntemplate literal");"#,
+    );
 
     // Concatenation is folded into one msgid.
-    assert_aligned(&src, &dummy, "JOINED", r#"gettext("Chunks are joined together");"#);
+    assert_aligned(
+        &src,
+        &dummy,
+        "JOINED",
+        r#"gettext("Chunks are joined together");"#,
+    );
 
     // TS `as` cast is unwrapped.
-    assert_aligned(&src, &dummy, r#"gettext("typed away""#, r#"gettext("typed away");"#);
+    assert_aligned(
+        &src,
+        &dummy,
+        r#"gettext("typed away""#,
+        r#"gettext("typed away");"#,
+    );
 
     // Untagged comment above SLOGAN is not attached anywhere.
-    let slogan_line = src.lines().position(|l| l.contains("Fresh produce")).unwrap();
+    let slogan_line = src
+        .lines()
+        .position(|l| l.contains("Fresh produce"))
+        .unwrap();
     let prev = dummy.lines().nth(slogan_line - 1).unwrap_or_default();
-    assert!(!prev.contains("plain comment"), "untagged comment must not be copied");
+    assert!(
+        !prev.contains("plain comment"),
+        "untagged comment must not be copied"
+    );
 
     // Tagged comments ARE copied, on their own original lines.
-    assert_aligned(&src, &dummy, "// Translators: title", "// Translators: title of the checkout screen");
-    assert_aligned(&src, &dummy, "// Translators: items", "// Translators: items in the shopping cart");
-    assert_aligned(&src, &dummy, "/* Translators: block comment", "/* Translators: block comment");
-    assert_aligned(&src, &dummy, "spanning multiple lines", "spanning multiple lines */");
+    assert_aligned(
+        &src,
+        &dummy,
+        "// Translators: title",
+        "// Translators: title of the checkout screen",
+    );
+    assert_aligned(
+        &src,
+        &dummy,
+        "// Translators: items",
+        "// Translators: items in the shopping cart",
+    );
+    assert_aligned(
+        &src,
+        &dummy,
+        "/* Translators: block comment",
+        "/* Translators: block comment",
+    );
+    assert_aligned(
+        &src,
+        &dummy,
+        "spanning multiple lines",
+        "spanning multiple lines */",
+    );
 
     // Trailing same-line comment must not leak into the dummy.
-    assert!(!dummy.contains("trailing comment"), "no trailing comment in dummy");
+    assert!(
+        !dummy.contains("trailing comment"),
+        "no trailing comment in dummy"
+    );
 
     // A call directly after a trailing-comment line still extracts.
-    assert_aligned(&src, &dummy, r#"gettext("Still works")"#, r#"gettext("Still works");"#);
+    assert_aligned(
+        &src,
+        &dummy,
+        r#"gettext("Still works")"#,
+        r#"gettext("Still works");"#,
+    );
 
     // Idiomatic JSX brace-wrapped translator comments attach; tree-sitter's
     // comment node excludes the braces, so the dummy gets the pure comment.
-    assert_aligned(&src, &dummy, r#"t("Brace wrapped comment")"#, r#"gettext("Brace wrapped comment");"#);
+    assert_aligned(
+        &src,
+        &dummy,
+        r#"t("Brace wrapped comment")"#,
+        r#"gettext("Brace wrapped comment");"#,
+    );
     assert_aligned(
         &src,
         &dummy,
@@ -143,12 +227,22 @@ fn modern_js_member_calls_and_quotes() {
     let ext = extract(&src, "js", &Config::default()).unwrap();
 
     assert!(!ext.had_parse_errors, "fixture must parse cleanly");
-    assert_eq!(ext.calls.len(), 6, "member calls via i18n.t / window.gettext / window.ngettext: {:#?}", ext.calls);
+    assert_eq!(
+        ext.calls.len(),
+        6,
+        "member calls via i18n.t / window.gettext / window.ngettext: {:#?}",
+        ext.calls
+    );
 
     let dummy = render(&ext);
     assert_valid_js(&dummy);
 
-    assert_aligned(&src, &dummy, r#"i18n.t("Dashboard overview")"#, r#"gettext("Dashboard overview");"#);
+    assert_aligned(
+        &src,
+        &dummy,
+        r#"i18n.t("Dashboard overview")"#,
+        r#"gettext("Dashboard overview");"#,
+    );
     assert_aligned(
         &src,
         &dummy,
@@ -156,14 +250,39 @@ fn modern_js_member_calls_and_quotes() {
         r#"ngettext("%(n)s product selected", "%(n)s products selected", 1);"#,
     );
     // `?.` chains still count as member calls on the property name.
-    assert_aligned(&src, &dummy, r#"t?.("Deeply optional")"#, r#"gettext("Deeply optional");"#);
+    assert_aligned(
+        &src,
+        &dummy,
+        r#"t?.("Deeply optional")"#,
+        r#"gettext("Deeply optional");"#,
+    );
     // Quote styles normalize to double quotes, escapes re-encoded.
-    assert_aligned(&src, &dummy, r#"_("He said \"hello\"")"#, r#"gettext("He said \"hello\"");"#);
-    assert_aligned(&src, &dummy, r"'it\'s single-quoted'", r#"gettext("it's single-quoted");"#);
-    assert_aligned(&src, &dummy, r#"gettext("Цената е"#, r#"gettext("Цената е %(price)s лв.");"#);
+    assert_aligned(
+        &src,
+        &dummy,
+        r#"_("He said \"hello\"")"#,
+        r#"gettext("He said \"hello\"");"#,
+    );
+    assert_aligned(
+        &src,
+        &dummy,
+        r"'it\'s single-quoted'",
+        r#"gettext("it's single-quoted");"#,
+    );
+    assert_aligned(
+        &src,
+        &dummy,
+        r#"gettext("Цената е"#,
+        r#"gettext("Цената е %(price)s лв.");"#,
+    );
 
     // Tagged indented comment is attached.
-    assert_aligned(&src, &dummy, "// Translators: heading", "// Translators: heading on the dashboard card");
+    assert_aligned(
+        &src,
+        &dummy,
+        "// Translators: heading",
+        "// Translators: heading on the dashboard card",
+    );
 }
 
 #[test]
@@ -188,7 +307,7 @@ fn two_calls_on_one_line_share_it() {
     let dummy = render(&ext);
     assert_eq!(
         dummy.lines().next(),
-        Some(r#"gettext("first"); gettext("second");"#.into())
+        Some(r#"gettext("first"); gettext("second");"#)
     );
     assert_valid_js(&dummy);
 }
@@ -198,12 +317,16 @@ fn template_with_substitution_is_rejected() {
     // Regression: tree-sitter names the interpolation node
     // `template_substitution` — templates containing one must warn and skip,
     // never leak a literal "${…}" into a msgid.
-    let src = "const a = t(`Hi ${name}`);\nconst b = t(`Hi ${'you'}`);\nconst c = t(`Plain template`);\n";
+    let src =
+        "const a = t(`Hi ${name}`);\nconst b = t(`Hi ${'you'}`);\nconst c = t(`Plain template`);\n";
     let ext = extract(src, "js", &Config::default()).unwrap();
     assert_eq!(ext.calls.len(), 1);
     assert_eq!(ext.calls[0].code, r#"gettext("Plain template");"#);
     assert_eq!(ext.warnings.len(), 2, "{:#?}", ext.warnings);
-    assert!(!render(&ext).contains("${"), "no interpolation may leak into dummy output");
+    assert!(
+        !render(&ext).contains("${"),
+        "no interpolation may leak into dummy output"
+    );
 
     // Also inside concatenation.
     let src2 = "const d = t(\"Hi \" + `${name}` + \"!\");\n";
@@ -216,7 +339,9 @@ fn template_with_substitution_is_rejected() {
 fn custom_function_table() {
     let mut config = Config::default();
     config.functions.clear();
-    config.functions.insert("tr".to_string(), i18n_mirror::Kind::Gettext);
+    config
+        .functions
+        .insert("tr".to_string(), i18n_mirror::Kind::Gettext);
     let src = r#"tr("custom fn"); gettext("default fn no longer configured");"#;
     let ext = extract(src, "js", &config).unwrap();
     assert_eq!(ext.calls.len(), 1);

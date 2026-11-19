@@ -148,7 +148,10 @@ mod tests {
     fn decode_plain_and_escaped() {
         assert_eq!(decode("plain", false).unwrap(), "plain");
         assert_eq!(decode("a\\nb", false).unwrap(), "a\nb");
-        assert_eq!(decode("\\t\\r\\b\\f\\v", false).unwrap(), "\t\r\u{8}\u{c}\u{b}");
+        assert_eq!(
+            decode("\\t\\r\\b\\f\\v", false).unwrap(),
+            "\t\r\u{8}\u{c}\u{b}"
+        );
         assert_eq!(decode("it\\'s", false).unwrap(), "it's");
         assert_eq!(decode("say \\\"hi\\\"", false).unwrap(), "say \"hi\"");
         assert_eq!(decode("back\\\\slash", false).unwrap(), "back\\slash");
@@ -163,7 +166,10 @@ mod tests {
     fn decode_template_newlines() {
         assert_eq!(decode("a\nb", true).unwrap(), "a\nb");
         assert_eq!(decode("a\r\nb", true).unwrap(), "a\nb");
-        assert!(decode("a\nb", false).is_none(), "raw newline invalid in quoted string");
+        assert!(
+            decode("a\nb", false).is_none(),
+            "raw newline invalid in quoted string"
+        );
     }
 
     #[test]
@@ -193,7 +199,11 @@ mod tests {
         ] {
             let lit = encode(s);
             let inner = &lit[1..lit.len() - 1];
-            assert_eq!(decode(inner, false).unwrap(), s, "round trip failed for {s:?}");
+            assert_eq!(
+                decode(inner, false).unwrap(),
+                s,
+                "round trip failed for {s:?}"
+            );
         }
     }
 }
