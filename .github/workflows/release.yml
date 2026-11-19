@@ -51,7 +51,7 @@ jobs:
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
       - name: Add manylinux platform tags to static wheel
         run: |
-          python3 -m pip install --quiet wheel
+          python3 -m pip install --quiet --upgrade "wheel>=0.40"
           python3 -m wheel tags --remove \
             --platform-tag "manylinux_2_17_${{ matrix.target }}.manylinux2014_${{ matrix.target }}.musllinux_1_2_${{ matrix.target }}" \
             dist/*.whl
