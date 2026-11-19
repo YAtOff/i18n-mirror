@@ -1,0 +1,34 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+# The extractor is a pure Rust CLI (no Python extension module), so we ship it
+# with maturin's `bin` bindings — the same mechanism Ruff uses to distribute a
+# Rust executable on PyPI. Wheels are ABI-independent (py3-none-<platform>):
+# `pip install i18n-mirror` / `uv add --dev i18n-mirror` puts the ready-made
+# binary on PATH; no Rust toolchain is needed on the installing machine.
+# CI builds the per-platform wheels (see .github/workflows/).
+
+[project]
+name = "i18n-mirror"
+version = "0.1.0"
+description = "Extract gettext calls from modern JS/TS/JSX (React) sources into xgettext-safe dummy files with exact line numbers — built for Django makemessages."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.8"
+keywords = ["django", "gettext", "i18n", "react", "typescript", "jsx", "xgettext", "makemessages"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Rust",
+    "Topic :: Software Development :: Internationalization",
+    "Topic :: Software Development :: Build Tools",
+]
+
+[project.urls]
+source = "https://github.com/your-org/i18n-mirror"
+
+[tool.maturin]
+bindings = "bin"

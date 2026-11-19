@@ -1,0 +1,75 @@
+# Client-side translations (djangojs domain) for the i18n pipeline demo.
+# Bulgarian. Msgids were extracted from the React sources by i18n-mirror.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: django-modern-js-translator\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-16 20:45+0200\n"
+"PO-Revision-Date: 2026-11-16 17:50+0200\n"
+"Last-Translator: Demo Translator <demo@example.com>\n"
+"Language-Team: Bulgarian\n"
+"Language: bg\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: frontend/src/App.tsx:9
+msgid "Fresh market — order online"
+msgstr "Пресен пазар — поръчайте онлайн"
+
+#. Translators: summary of the shopping cart; %(count)s is the item count
+#: frontend/src/components/Cart.tsx:12
+msgid "1 item"
+msgid_plural "%(count)s items"
+msgstr[0] "1 артикул"
+msgstr[1] "%(count)s артикула"
+
+#: frontend/src/components/Cart.tsx:16
+msgctxt "checkout"
+msgid "Your shopping cart"
+msgstr "Вашата количка"
+
+#. Translators: label of the button that adds the item to the cart
+#: frontend/src/components/Cart.tsx:21
+msgid "Add to cart"
+msgstr "Добави в количката"
+
+#: frontend/src/components/Cart.tsx:25
+msgctxt "checkout"
+msgid "Continue to checkout"
+msgstr "Продължи към плащане"
+
+#: frontend/src/components/Cart.tsx:27
+msgctxt "checkout"
+msgid "%(count)s step remaining"
+msgid_plural "%(count)s steps remaining"
+msgstr[0] "Остава %(count)s стъпка"
+msgstr[1] "Остават %(count)s стъпки"
+
+#: frontend/src/components/ProductList.tsx:19
+msgid "Today's market stall"
+msgstr "Днешният пазарен щанд"
+
+#: frontend/src/components/ProductList.tsx:25
+msgid "%(price)s per %(unit)s"
+msgstr "%(price)s за %(unit)s"
+
+#. Translators: shown when a product is out of stock
+#: frontend/src/components/ProductList.tsx:32
+msgid "Sold out — come back Friday"
+msgstr "Свърши — ето ни пак в петък"
+
+#. Translators: %(stock)s is the remaining unit count
+#: frontend/src/components/ProductList.tsx:35
+msgid "Only %(stock)s left"
+msgstr "Остават само %(stock)s броя"
+
+#: frontend/src/components/StatusBanner.tsx:14
+msgid "The market is closed — deliveries resume at 09:00"
+msgstr "Пазарът е затворен — доставките се възобновяват в 09:00"
+
+#: frontend/src/components/StatusBanner.tsx:20
+msgid "Catalog loaded successfully — the pipeline works."
+msgstr "Каталогът зареди успешно — конвейерът работи."

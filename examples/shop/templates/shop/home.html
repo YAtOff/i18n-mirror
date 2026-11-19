@@ -1,0 +1,79 @@
+{% load i18n %}
+<!doctype html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% trans "Modern React i18n pipeline for Django" %}</title>
+  <style>
+    body { font: 16px/1.6 system-ui, sans-serif; margin: 2rem auto; max-width: 46rem; padding: 0 1rem; color: #1a1a2e; }
+    h1, h2 { border-bottom: 2px solid #e63946; padding-bottom: .3rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: .5rem; }
+    th, td { text-align: left; border-bottom: 1px solid #eee; padding: .4rem .6rem; }
+    th { width: 16rem; color: #555; }
+    code { background: #f4f4f8; padding: .1rem .3rem; border-radius: 3px; }
+    form.language { float: right; }
+    .ok { color: #2a9d8f; }
+  </style>
+</head>
+<body>
+  <form class="language" action="{% url 'set_language' %}" method="post">{% csrf_token %}
+    <select name="language" onchange="this.form.submit()">
+      <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>English</option>
+      <option value="bg" {% if LANGUAGE_CODE|slice:":2" == 'bg' %}selected{% endif %}>Български</option>
+    </select>
+    <noscript><button type="submit">{% trans "Change language" %}</button></noscript>
+  </form>
+
+  <h1>{% trans "Modern React i18n pipeline for Django" %}</h1>
+  <p>
+    {% blocktrans %}The strings in this section are translated server-side by the django domain.{% endblocktrans %}
+  </p>
+
+  <h2>{% trans "Client-side catalog (djangojs domain)" %}</h2>
+  <p>
+    {% blocktrans %}The rows below are produced in the browser by the gettext functions Django serves at the jsi18n view. Their msgids were extracted from the React sources under frontend/src by the Rust mirror tool — see the .po references.{% endblocktrans %}
+  </p>
+
+  <table id="js-demo">
+    <tr><td><code>gettext()</code></td><td>…</td></tr>
+  </table>
+
+  <p>
+    {% trans "The page URL is" %} <code>/</code> — {% trans "refresh after switching the language" %}.
+  </p>
+
+  {# The catalog script defines the documented functions: gettext, ngettext, #}
+  {# pgettext, npgettext, interpolate, get_format, gettext_noop, pluralidx. #}
+  <script src="{% url 'javascript-catalog' %}"></script>
+  <script>
+    // All msgids used below also appear in the React components under
+    // frontend/src — extraction and runtime share one catalog.
+    const cartCount = 3;
+    const rows = [
+      ["gettext()", gettext("Add to cart")],
+      ["ngettext()", interpolate(
+        ngettext("1 item", "%(count)s items", cartCount),
+        {count: cartCount},
+        true,
+      )],
+      ["pgettext()", pgettext("checkout", "Continue to checkout")],
+      ["npgettext()", interpolate(
+        npgettext("checkout", "%(count)s step remaining", "%(count)s steps remaining", cartCount),
+        {count: cartCount},
+        true,
+      )],
+      ["pluralidx(0/1/2)", [0, 1, 2].map(pluralidx).join(" / ")],
+      ["get_format(\"\")", get_format("SHORT_DATE_FORMAT")],
+    ];
+    const table = document.getElementById("js-demo");
+    table.innerHTML = rows
+      .map(([fn, result]) => `<tr><td><code>${fn}</code></td><td>${result}</td></tr>`)
+      .join("");
+    const stamp = document.createElement("p");
+    stamp.className = "ok";
+    stamp.textContent = gettext("Catalog loaded successfully — the pipeline works.");
+    table.after(stamp);
+  </script>
+</body>
+</html>

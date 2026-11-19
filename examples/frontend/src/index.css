@@ -1,0 +1,64 @@
+:root {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.6;
+  color: #1a1a2e;
+  background: #faf9f6;
+}
+
+main.app {
+  max-width: 46rem;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+h1, h2 {
+  border-bottom: 2px solid #e63946;
+  padding-bottom: 0.3rem;
+}
+
+.products ul {
+  list-style: none;
+  padding: 0;
+}
+
+.products li {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.products li.sold-out {
+  color: #999;
+}
+
+.products li span {
+  color: #555;
+}
+
+.cart button {
+  font: inherit;
+  background: #e63946;
+  color: white;
+  border: 0;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  cursor: pointer;
+}
+
+.banner {
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
+.banner.ok {
+  background: #e0f2f1;
+  color: #2a9d8f;
+}
+
+.banner.warning {
+  background: #fff3cd;
+  color: #856404;
+}

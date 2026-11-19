@@ -1,0 +1,22 @@
+# Rust
+/target/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Packaging
+/dist/
+
+# Example app artifacts
+build/
+*.mo
+locale/**/*.pot
+node_modules/
+frontend/dist/
+examples/frontend/dist/
+examples/frontend/.vite/
+
+# Misc
+.DS_Store
